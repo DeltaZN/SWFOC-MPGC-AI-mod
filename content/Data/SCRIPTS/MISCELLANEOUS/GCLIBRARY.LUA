@@ -33,11 +33,32 @@ function Is_Indigenous(unit)
 			table_contains(indigenous, type_name)
 end
 
-function Change_Control_Indigenous(player)
+function Change_Control_Indigenous(player, battle_participants)
 	local player_unit_list = Find_All_Objects_Of_Type("Infantry | Structure")
 	for k, unit in pairs(player_unit_list) do
-		if Is_Indigenous(unit) then
+		-- if unit is indigenous and its owner is not battle participant, change owner to third player
+		if Is_Indigenous(unit) and not battle_participants[unit.Get_Owner()] then
 			unit.Change_Owner(player)
+		end
+	end
+end
+
+reinforcement_points_types = {"REINFORCEMENT_POINT_PLUS1_CAP", "REINFORCEMENT_POINT_PLUS2_CAP", "REINFORCEMENT_POINT_PLUS3_CAP",
+						"REINFORCEMENT_POINT_PLUS4_CAP", "REINFORCEMENT_POINT_PLUS5_CAP","REINFORCEMENT_POINT_PLUS10_CAP"}
+
+function Get_All_Reinforcement_Points()
+	local reinforcement_points = {}
+	
+	return reinforcement_points
+end
+
+function Change_Control_Landing_Zones(player, battle_participants)
+	for _, point in pairs(reinforcement_points_types) do
+		local cap_points = Find_All_Objects_Of_Type(point)
+		for k, unit in pairs(cap_points) do
+			if not battle_participants[unit.Get_Owner()] then
+				unit.Change_Owner(player)
+			end
 		end
 	end
 end
@@ -50,7 +71,7 @@ function Spawn_Units(player)
 		Add_Unit("Merchant_Freighter", player)
 		Add_Unit("Merchant_Freighter", player)
 		if GameRandom.Get_Float() < 0.1 then
-			Add_Objective("Our sensors have detected presense of a medium-size pirate fleet in the system!", false)
+			Add_Objective("Our sensors have detected presense of a medium-size pirate fleet in the system!", true)
 			Add_Unit("IPV1_System_Patrol_Craft", player)
 			Add_Unit("IPV1_System_Patrol_Craft", player)
 			Add_Unit("Pirate_Frigate", player)
@@ -67,7 +88,7 @@ function Spawn_Units(player)
 		Add_Unit("Kashyyyk_Wookie_War_Party", player)
 		Add_Unit("Sandpeople_War_Party", player)
 		if GameRandom.Get_Float() < 0.25 then
-			Add_Objective("We have reports of mandalorians who were hired to fight against us!", false)
+			Add_Objective("We have reports of mandalorians who were hired to fight against us!", true)
 			Add_Unit("Mandalorian_Indigenous_Company", player)
 			Add_Unit("Mandalorian_Indigenous_Company", player)
 			Add_Unit("Mandalorian_Indigenous_Company", player)
@@ -78,14 +99,15 @@ function Spawn_Units(player)
 	end
 end
 
-function Apply_3rd_Player_Game_Mode(player)
-	Add_Objective("It's possible that the third player is participating in the battle, be cautious!", false)
+function Apply_3rd_Player_Game_Mode(player, battle_participants)
+	Add_Objective("It's possible that the third player is participating in the battle, be cautious!", true)
 	FogOfWar.Reveal_All(player)
-	Change_Control_Indigenous(player)
+	Change_Control_Landing_Zones(player, battle_participants)
+	Change_Control_Indigenous(player, battle_participants)
 	Spawn_Units(player)
 end
 
-function Reveal_For_Player(player)
+function Has_Valid_Units(player)
 	local player_unit_list = Find_All_Objects_Of_Type(player)
 	local has_valid_units = false
 	for k, unit in pairs(player_unit_list) do
@@ -94,14 +116,43 @@ function Reveal_For_Player(player)
 			break
 		end
 	end
-	if not has_valid_units then
-		Apply_3rd_Player_Game_Mode(player)
+	return has_valid_units
+end
+
+function Print_All_Player_Objects(player)
+	local player_unit_list = Find_All_Objects_Of_Type(player)
+	for k, unit in pairs(player_unit_list) do
+		Add_Objective(tostring(unit.Get_Type().Get_Name()), false)
 	end
 end
 
 function Reveal_For_Specators()
 	wait(15)
-	Reveal_For_Player(Find_Player("Underworld"))
-	Reveal_For_Player(Find_Player("Rebel"))
-	Reveal_For_Player(Find_Player("Empire"))
+	local underworld = Find_Player("Underworld")
+	local rebel = Find_Player("Rebel")
+	local empire = Find_Player("Empire")
+	local is_underworld_present = Has_Valid_Units(underworld)
+	local is_rebel_present = Has_Valid_Units(rebel)
+	local is_empire_present = Has_Valid_Units(empire)
+	local battle_participants = {}
+	local third_player = nil
+	if not is_underworld_present then
+		battle_participants[rebel] = true
+		battle_participants[empire] = true
+		third_player = underworld
+	end
+	if not is_rebel_present then
+		battle_participants[underworld] = true
+		battle_participants[empire] = true
+		third_player = rebel
+	end
+	if not is_empire_present then
+		battle_participants[underworld] = true
+		battle_participants[rebel] = true
+		third_player = empire
+	end
+
+	if third_player then
+		Apply_3rd_Player_Game_Mode(third_player, battle_participants)
+	end
 end
