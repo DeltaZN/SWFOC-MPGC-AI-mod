@@ -1,0 +1,2 @@
+There are some limitations with the AI, it works only being packaged as meg, and at the same time scripts doesn't work if they are in meg.
+So, the folder which is used for the publishing mod is `publish`.

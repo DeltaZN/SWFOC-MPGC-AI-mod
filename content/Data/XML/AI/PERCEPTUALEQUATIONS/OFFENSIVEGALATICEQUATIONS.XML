@@ -352,7 +352,13 @@
 	</Ground_Contrast>
 
 	<Am_I_In_Winning_Position>
-		1.0
+				(Game.Age > 300.0) 
+		*
+		(Variable_Self.PlanetsControlledUnnormalized > (2.0 * Variable_Human.PlanetsControlled))
+		*
+		(Variable_Self.SpaceTotalUnnormalized > (3.0 * Variable_Human.SpaceTotalUnnormalized))
+		*
+		(Variable_Self.GroundTotalUnnormalized > (3.0 * Variable_Human.GroundTotalUnnormalized))
 	</Am_I_In_Winning_Position>
 	
 	<!-- Same basic concept as whether I should conquer a planet
@@ -362,7 +368,7 @@
 			Target must have accessible surface
 	-->
 	<Is_Good_Raid_Target>
-		(0.5 + (1000 >= Variable_Target.EnemyForce.GroundTotalUnnormalized))
+		(0.9 + (1000 >= Variable_Target.EnemyForce.GroundTotalUnnormalized))
 		*
 		Variable_Self.IsFaction {Parameter_Faction = "REBEL"} *
 		Function_Is_Good_Invasion_Target.Evaluate *

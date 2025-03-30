@@ -481,7 +481,39 @@
 		circumstances
 		-->
 	<Want_To_Retreat_From_Space>
-		0.0
+		50.0
+		*
+		(Variable_Self.IsDefender * (Game.Age > 20) +
+		(1 - Variable_Self.IsDefender) * (Game.Age > 120))
+		*
+		(
+			(
+				Game.IsCampaignGame
+				*
+				(
+					(1.0 - Variable_Self.IsDefender) *
+					(Variable_Enemy.FriendlyForceUnnormalized{Parameter_Attenuator = 1.0} >= (4.0 * Variable_Self.FriendlyForceUnnormalized{Parameter_Attenuator = 1.0}))
+					+
+					(Variable_Self.IsDefender * 
+					(Variable_Self.BaseLevel == 0) *
+					(Variable_Enemy.FriendlyForceUnnormalized{Parameter_Attenuator = 1.0} >= (4.0 * Variable_Self.FriendlyForceUnnormalized{Parameter_Attenuator = 1.0})))
+					+
+					((3.0 * Variable_Self.FriendlyForceUnnormalized {Parameter_Category = GameObjectCategoryType[Transport]}) >= Variable_Self.FriendlyForceUnnormalized)
+					+
+					(Variable_Self.FriendlyForceUnnormalized {Parameter_Category = GameObjectCategoryType[Transport]} >= 50) *
+					(1000 >= Variable_Self.FriendlyForceUnnormalized) *
+					(Variable_Enemy.FriendlyForceUnnormalized > Variable_Self.FriendlyForceUnnormalized)
+					+
+					(Variable_Self.IsDefender) *
+					(Variable_Self.FriendlyForceUnnormalized {Parameter_Category = GameObjectCategoryType[Transport]} >= 150)
+				)
+				+
+				(1 - Game.IsCampaignGame)
+				*
+				(Variable_Self.BaseLevel == 0)
+			)
+			> 0
+		)
 	</Want_To_Retreat_From_Space>
 
 	<!-- 
@@ -492,11 +524,7 @@
 			Are we not pirates
 	-->
 	<Allowed_To_Retreat_From_Space>
-		Game.IsCampaignGame
-		*
-		Variable_Self.CanRetreat
-		*
-		(1.0 - Variable_Self.IsFaction {Parameter_Faction = "Pirates"})
+		0.0
 	</Allowed_To_Retreat_From_Space>
 
 	<Should_Retreat_From_Space>
